@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 
 import { connectDB } from './config/db.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
+import authRoutes from './routes/authRoutes.js';
 
 dotenv.config();
 
@@ -78,6 +79,9 @@ app.get('/api/health', (req, res) => {
 app.get('/', (req, res) => {
   res.json({ message: 'E-Commerce REST API is up and running' });
 });
+
+// API Routes
+app.use('/api/auth', authRoutes);
 
 // Error handling middleware
 app.use(notFound);
