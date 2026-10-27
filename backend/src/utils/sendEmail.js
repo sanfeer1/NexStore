@@ -1,36 +1,58 @@
 import nodemailer from 'nodemailer';
 
+let cachedEtherealTransporter = null;
+
 /**
  * Configure Nodemailer Transporter
  */
-const createTransporter = () => {
+const getTransporter = async () => {
   const host = process.env.SMTP_HOST;
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
 
-  // If real SMTP credentials are provided
+  // 1. If real SMTP credentials are provided in .env
   if (host && user && pass && !user.includes('your_')) {
-    return nodemailer.createTransport({
-      host,
-      port: Number(process.env.SMTP_PORT) || 587,
-      secure: Number(process.env.SMTP_PORT) === 465,
-      auth: { user, pass },
-    });
+    return {
+      transporter: nodemailer.createTransport({
+        service: host.includes('gmail') ? 'gmail' : undefined,
+        host: host.includes('gmail') ? undefined : host,
+        port: Number(process.env.SMTP_PORT) || 587,
+        secure: Number(process.env.SMTP_PORT) === 465,
+        auth: { user, pass },
+      }),
+      isReal: true,
+    };
   }
 
-  // Graceful Local Development Transporter (Logs to console without crashing)
-  return {
-    sendMail: async (options) => {
-      console.log('\n================== [EMAIL DISPATCHED] ==================');
-      console.log(`To: ${options.to}`);
-      console.log(`Subject: ${options.subject}`);
-      console.log(`From: ${options.from || 'NexStore <no-reply@nexstore.com>'}`);
-      console.log('--------------------------------------------------------');
-      console.log(options.text || '(HTML Email Content Attached)');
-      console.log('========================================================\n');
-      return { messageId: `mock_${Date.now()}` };
-    },
-  };
+  // 2. Automated Ethereal Sandbox Fallback (Live Web-Viewable Email link)
+  if (!cachedEtherealTransporter) {
+    try {
+      const testAccount = await nodemailer.createTestAccount();
+      cachedEtherealTransporter = nodemailer.createTransport({
+        host: 'smtp.ethereal.email',
+        port: 587,
+        secure: false,
+        auth: {
+          user: testAccount.user,
+          pass: testAccount.pass,
+        },
+      });
+    } catch (err) {
+      // Fallback in-memory logger
+      return {
+        transporter: {
+          sendMail: async (options) => {
+            console.log('\n[CONSOLE EMAIL PREVIEW]');
+            console.log(`To: ${options.to} | Subject: ${options.subject}`);
+            return { messageId: 'mock' };
+          },
+        },
+        isReal: false,
+      };
+    }
+  }
+
+  return { transporter: cachedEtherealTransporter, isReal: false };
 };
 
 /**
@@ -38,9 +60,9 @@ const createTransporter = () => {
  */
 export const sendEmail = async ({ to, subject, html, text }) => {
   try {
-    const transporter = createTransporter();
+    const { transporter, isReal } = await getTransporter();
     const fromName = process.env.FROM_NAME || 'NexStore Concierge';
-    const fromEmail = process.env.FROM_EMAIL || 'notifications@nexstore.com';
+    const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USER || 'no-reply@nexstore.com';
 
     const info = await transporter.sendMail({
       from: `"${fromName}" <${fromEmail}>`,
@@ -50,10 +72,23 @@ export const sendEmail = async ({ to, subject, html, text }) => {
       html,
     });
 
+    if (!isReal) {
+      const previewUrl = nodemailer.getTestMessageUrl(info);
+      console.log('\n================== [SANDBOX EMAIL DELIVERED] ==================');
+      console.log(`To:      ${to}`);
+      console.log(`Subject: ${subject}`);
+      if (previewUrl) {
+        console.log(`🔗 Click to view the actual rendered email:`);
+        console.log(`   ${previewUrl}`);
+      }
+      console.log('===============================================================\n');
+    } else {
+      console.log(`[Email Service] Live email sent to: ${to}`);
+    }
+
     return info;
   } catch (error) {
     console.error(`[Email Service Warning]: Failed to deliver email to ${to}:`, error.message);
-    // Don't re-throw so user signup/order flow is never blocked by email server timeout
     return null;
   }
 };
