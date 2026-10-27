@@ -189,7 +189,8 @@ const products = [
 
 export const seedData = async () => {
   try {
-    const mongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/ecommerce_db';
+    let mongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/ecommerce_db';
+    mongoUri = mongoUri.replace(/(\.mongodb\.net|\.com|\.net|\.org|\d+)\/\/+([a-zA-Z0-9_-]+)/g, '$1/$2');
     await mongoose.connect(mongoUri);
     console.log('[Seeder] Connected to database');
 
