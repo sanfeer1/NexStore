@@ -1,5 +1,11 @@
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
+import User from '../models/User.js';
+import {
+  sendOrderConfirmationEmail,
+  sendOrderCancelledEmail,
+  sendOrderStatusUpdateEmail,
+} from '../utils/sendEmail.js';
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -55,6 +61,11 @@ export const createOrder = async (req, res, next) => {
     });
 
     const createdOrder = await order.save();
+
+    // Trigger Order Confirmation Email Alert asynchronously
+    sendOrderConfirmationEmail(createdOrder, req.user).catch((err) =>
+      console.error('[Order Confirmation Email Error]:', err.message)
+    );
 
     res.status(201).json({
       success: true,
@@ -118,6 +129,67 @@ export const getMyOrders = async (req, res, next) => {
   }
 };
 
+// @desc    Cancel order (Customer or Admin)
+// @route   PUT /api/orders/:id/cancel
+// @access  Private
+export const cancelOrder = async (req, res, next) => {
+  try {
+    const { reason } = req.body;
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      res.status(404);
+      throw new Error('Order not found');
+    }
+
+    // Must be order owner or admin
+    if (
+      order.user.toString() !== req.user._id.toString() &&
+      req.user.role !== 'admin'
+    ) {
+      res.status(403);
+      throw new Error('Not authorized to cancel this order');
+    }
+
+    if (order.orderStatus === 'Cancelled') {
+      res.status(400);
+      throw new Error('Order is already cancelled');
+    }
+
+    if (order.orderStatus === 'Delivered') {
+      res.status(400);
+      throw new Error('Delivered orders cannot be cancelled');
+    }
+
+    // Restore inventory stock
+    for (const item of order.orderItems) {
+      const product = await Product.findById(item.product);
+      if (product) {
+        product.stock += item.quantity;
+        await product.save();
+      }
+    }
+
+    order.orderStatus = 'Cancelled';
+    const updatedOrder = await order.save();
+
+    // Trigger Order Cancellation Email Alert asynchronously
+    sendOrderCancelledEmail(
+      updatedOrder,
+      req.user,
+      reason || 'Requested by customer'
+    ).catch((err) => console.error('[Order Cancelled Email Error]:', err.message));
+
+    res.status(200).json({
+      success: true,
+      order: updatedOrder,
+      message: 'Order cancelled successfully and stock restored',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Update order to paid
 // @route   PUT /api/orders/:id/pay
 // @access  Private
@@ -175,7 +247,6 @@ export const getAllOrders = async (req, res, next) => {
       .skip(skip)
       .limit(limitNum);
 
-    // Calculate quick admin totals
     const totalRevenueResult = await Order.aggregate([
       { $match: { isPaid: true } },
       { $group: { _id: null, total: { $sum: '$totalPrice' } } },
@@ -200,8 +271,8 @@ export const getAllOrders = async (req, res, next) => {
 // @access  Private/Admin
 export const updateOrderStatus = async (req, res, next) => {
   try {
-    const { status } = req.body;
-    const order = await Order.findById(req.params.id);
+    const { status, reason } = req.body;
+    const order = await Order.findById(req.params.id).populate('user', 'name email');
 
     if (!order) {
       res.status(404);
@@ -220,12 +291,38 @@ export const updateOrderStatus = async (req, res, next) => {
       throw new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
     }
 
+    // If changing to Cancelled, restock items
+    if (status === 'Cancelled' && order.orderStatus !== 'Cancelled') {
+      for (const item of order.orderItems) {
+        const product = await Product.findById(item.product);
+        if (product) {
+          product.stock += item.quantity;
+          await product.save();
+        }
+      }
+    }
+
     order.orderStatus = status;
     if (status === 'Delivered') {
       order.deliveredAt = Date.now();
     }
 
     const updatedOrder = await order.save();
+
+    // Trigger Notification Email to customer
+    if (order.user?.email) {
+      if (status === 'Cancelled') {
+        sendOrderCancelledEmail(
+          updatedOrder,
+          order.user,
+          reason || 'Cancelled by store administration'
+        ).catch((err) => console.error('[Order Cancelled Email Error]:', err.message));
+      } else if (['Shipped', 'Delivered'].includes(status)) {
+        sendOrderStatusUpdateEmail(updatedOrder, order.user, status).catch((err) =>
+          console.error('[Order Status Email Error]:', err.message)
+        );
+      }
+    }
 
     res.status(200).json({
       success: true,

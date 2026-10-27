@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import { generateToken } from '../utils/generateToken.js';
+import { sendWelcomeEmail, sendLoginAlertEmail } from '../utils/sendEmail.js';
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
@@ -29,6 +30,11 @@ export const registerUser = async (req, res, next) => {
       password,
       role,
     });
+
+    // Send Welcome Email asynchronously
+    sendWelcomeEmail(user).catch((err) =>
+      console.error('[Welcome Email Error]:', err.message)
+    );
 
     res.status(201).json({
       success: true,
@@ -66,6 +72,13 @@ export const loginUser = async (req, res, next) => {
       res.status(401);
       throw new Error('Invalid email or password');
     }
+
+    // Send Login Security Alert Email asynchronously
+    const clientIp =
+      req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'Localhost';
+    sendLoginAlertEmail(user, clientIp).catch((err) =>
+      console.error('[Login Alert Error]:', err.message)
+    );
 
     res.status(200).json({
       success: true,

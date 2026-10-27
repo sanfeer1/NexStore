@@ -3,6 +3,7 @@ import {
   createOrder,
   getOrderById,
   getMyOrders,
+  cancelOrder,
   updateOrderToPaid,
   getAllOrders,
   updateOrderStatus,
@@ -19,6 +20,8 @@ router
 router.route('/myorders').get(protect, getMyOrders);
 
 router.route('/:id').get(protect, getOrderById);
+
+router.route('/:id/cancel').put(protect, cancelOrder);
 
 router.route('/:id/pay').put(protect, updateOrderToPaid);
 

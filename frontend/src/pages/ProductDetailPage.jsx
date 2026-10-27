@@ -34,7 +34,7 @@ const ProductDetailPage = () => {
           setActiveImage(res.data.product.images?.[0] || '');
         }
       })
-      .catch((err) => console.error(err))
+    .catch((err) => console.error(err))
       .finally(() => setLoading(false));
   }, [id]);
 

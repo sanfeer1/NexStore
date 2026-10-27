@@ -41,6 +41,20 @@ const OrderDetailPage = () => {
     );
   }
 
+  
+  const handleCancelOrder = async () => {
+    const reason = window.prompt('Please enter a cancellation reason (optional):') || 'Cancelled by customer';
+    try {
+      const res = await API.put(`/orders/${order._id}/cancel`, { reason });
+      if (res.data.success) {
+        setOrder(res.data.order);
+        alert('Order has been cancelled. An email alert has been dispatched.');
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to cancel order');
+    }
+  };
+
   const steps = ['Processing', 'Confirmed', 'Shipped', 'Delivered'];
   const currentStepIndex = steps.indexOf(order.orderStatus);
 
@@ -96,7 +110,16 @@ const OrderDetailPage = () => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {['Processing', 'Confirmed'].includes(order.orderStatus) && (
+            <button
+              onClick={handleCancelOrder}
+              className="btn btn-danger"
+              style={{ padding: '6px 14px', fontSize: '0.82rem' }}
+            >
+              Cancel Order
+            </button>
+          )}
           <span className={`badge ${order.isPaid ? 'badge-success' : 'badge-warning'}`} style={{ padding: '8px 14px', fontSize: '0.85rem' }}>
             {order.isPaid ? 'PAID & CONFIRMED' : 'PAYMENT PENDING'}
           </span>
