@@ -109,7 +109,7 @@ const RegisterPage = () => {
               <input
                 type="text"
                 required
-                placeholder="Sanfeer Rahman"
+                placeholder="John Smith"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 style={{ width: '100%', paddingLeft: '42px', height: '44px' }}
