@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShieldCheck, CreditCard, Truck, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ShieldCheck, CreditCard, Truck, CheckCircle2, AlertCircle, Zap } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import API from '../services/api';
@@ -28,11 +28,8 @@ const CheckoutPage = () => {
   const [country, setCountry] = useState(user?.addresses?.[0]?.country || 'India');
   const [phone, setPhone] = useState('9876543210');
 
-  // Payment method
-  const [paymentMethod, setPaymentMethod] = useState('Card');
-  const [cardNumber, setCardNumber] = useState('4242 •••• •••• 4242');
-  const [cardExpiry, setCardExpiry] = useState('12/28');
-  const [cardCvc, setCardCvc] = useState('999');
+  // Payment method: 'Razorpay' (Online) or 'COD' (Cash on Delivery)
+  const [paymentMethod, setPaymentMethod] = useState('Razorpay');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -51,6 +48,78 @@ const CheckoutPage = () => {
     );
   }
 
+  // Handle Razorpay Payment flow
+  const handleRazorpayPayment = async (orderId) => {
+    try {
+      // 1. Ask backend to create a Razorpay order
+      const { data: rzpData } = await API.post('/payment/razorpay/create-order', { orderId });
+
+      if (!rzpData.success || !rzpData.razorpayOrder) {
+        throw new Error('Could not initialize Razorpay order. Please try again.');
+      }
+
+      // Check if Razorpay script is loaded in window
+      if (typeof window.Razorpay === 'undefined') {
+        throw new Error('Razorpay SDK failed to load. Please check your internet connection.');
+      }
+
+      const options = {
+        key: rzpData.keyId,
+        amount: rzpData.razorpayOrder.amount,
+        currency: rzpData.razorpayOrder.currency,
+        name: 'NexStore E-Commerce',
+        description: `Order #${orderId.substring(0, 8).toUpperCase()}`,
+        order_id: rzpData.razorpayOrder.id,
+        handler: async function (response) {
+          try {
+            setLoading(true);
+            // 2. Cryptographic signature verification on backend
+            const verifyRes = await API.post('/payment/razorpay/verify', {
+              orderId,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+              isMock: rzpData.isMock,
+            });
+
+            if (verifyRes.data.success) {
+              clearCart();
+              navigate(`/orders/${orderId}`);
+            }
+          } catch (err) {
+            setError(err.response?.data?.message || 'Payment verification failed');
+          } finally {
+            setLoading(false);
+          }
+        },
+        prefill: {
+          name: user?.name || '',
+          email: user?.email || '',
+          contact: phone || '',
+        },
+        theme: {
+          color: '#6366f1',
+        },
+        modal: {
+          ondismiss: function () {
+            setLoading(false);
+            setError('Payment was cancelled. You can retry payment anytime.');
+          },
+        },
+      };
+
+      const razorpayInstance = new window.Razorpay(options);
+      razorpayInstance.on('payment.failed', function (response) {
+        setError(`Payment failed: ${response.error?.description || 'Transaction declined'}`);
+        setLoading(false);
+      });
+      razorpayInstance.open();
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Payment initiation failed');
+      setLoading(false);
+    }
+  };
+
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
     setError('');
@@ -62,7 +131,7 @@ const CheckoutPage = () => {
 
     setLoading(true);
     try {
-      // 1. Create order
+      // 1. Create order in MongoDB
       const orderPayload = {
         orderItems: cartItems.map((item) => ({
           product: item.product,
@@ -89,21 +158,17 @@ const CheckoutPage = () => {
       const { data } = await API.post('/orders', orderPayload);
 
       if (data.success && data.order) {
-        // If payment method is simulated card, mark paid immediately
-        if (paymentMethod === 'Card') {
-          await API.put(`/orders/${data.order._id}/pay`, {
-            id: `SIM_TXN_${Date.now()}`,
-            status: 'COMPLETED',
-            update_time: new Date().toISOString(),
-          });
+        if (paymentMethod === 'Razorpay') {
+          // Launch Razorpay Payment Gateway popup
+          await handleRazorpayPayment(data.order._id);
+        } else {
+          // COD (Cash on Delivery)
+          clearCart();
+          navigate(`/orders/${data.order._id}`);
         }
-
-        clearCart();
-        navigate(`/orders/${data.order._id}`);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to place order');
-    } finally {
       setLoading(false);
     }
   };
@@ -221,31 +286,37 @@ const CheckoutPage = () => {
               <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>2. Payment Selection</h3>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
-              {/* Option 1: Card */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '10px' }}>
+              {/* Option 1: Razorpay (Online Gateway) */}
               <label
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px',
-                  padding: '14px 18px',
+                  gap: '14px',
+                  padding: '16px 18px',
                   borderRadius: 'var(--radius-md)',
-                  background: paymentMethod === 'Card' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255, 255, 255, 0.04)',
-                  border: paymentMethod === 'Card' ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                  background: paymentMethod === 'Razorpay' ? 'rgba(99, 102, 241, 0.16)' : 'rgba(255, 255, 255, 0.04)',
+                  border: paymentMethod === 'Razorpay' ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
                   cursor: 'pointer',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 <input
                   type="radio"
                   name="paymentMethod"
-                  value="Card"
-                  checked={paymentMethod === 'Card'}
-                  onChange={() => setPaymentMethod('Card')}
-                  style={{ accentColor: 'var(--accent-primary)' }}
+                  value="Razorpay"
+                  checked={paymentMethod === 'Razorpay'}
+                  onChange={() => setPaymentMethod('Razorpay')}
+                  style={{ accentColor: 'var(--accent-primary)', width: '18px', height: '18px' }}
                 />
-                <div>
-                  <strong>Credit / Debit Card (Instant Sandbox Simulation)</strong>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Instant transaction confirmation</p>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <strong style={{ fontSize: '0.98rem' }}>Online Payment (Razorpay)</strong>
+                    <span className="badge badge-primary" style={{ fontSize: '0.7rem' }}>POPULAR</span>
+                  </div>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                    UPI (Google Pay, PhonePe, Paytm), Debit/Credit Cards, Netbanking & Wallets
+                  </p>
                 </div>
               </label>
 
@@ -254,12 +325,13 @@ const CheckoutPage = () => {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px',
-                  padding: '14px 18px',
+                  gap: '14px',
+                  padding: '16px 18px',
                   borderRadius: 'var(--radius-md)',
-                  background: paymentMethod === 'COD' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255, 255, 255, 0.04)',
-                  border: paymentMethod === 'COD' ? '1px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                  background: paymentMethod === 'COD' ? 'rgba(99, 102, 241, 0.16)' : 'rgba(255, 255, 255, 0.04)',
+                  border: paymentMethod === 'COD' ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
                   cursor: 'pointer',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 <input
@@ -268,62 +340,16 @@ const CheckoutPage = () => {
                   value="COD"
                   checked={paymentMethod === 'COD'}
                   onChange={() => setPaymentMethod('COD')}
-                  style={{ accentColor: 'var(--accent-primary)' }}
+                  style={{ accentColor: 'var(--accent-primary)', width: '18px', height: '18px' }}
                 />
-                <div>
-                  <strong>Cash on Delivery (Pay upon arrival)</strong>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Pay cash or UPI at your doorstep</p>
+                <div style={{ flex: 1 }}>
+                  <strong style={{ fontSize: '0.98rem' }}>Cash on Delivery (COD)</strong>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                    Pay via cash or UPI upon package arrival at your doorstep
+                  </p>
                 </div>
               </label>
             </div>
-
-            {paymentMethod === 'Card' && (
-              <div style={{
-                padding: '18px',
-                borderRadius: 'var(--radius-md)',
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid var(--border-subtle)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-              }}>
-                <div>
-                  <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-                    Card Number (Sandbox Auto-filled)
-                  </label>
-                  <input
-                    type="text"
-                    value={cardNumber}
-                    onChange={(e) => setCardNumber(e.target.value)}
-                    style={{ width: '100%', fontFamily: 'monospace' }}
-                  />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <div>
-                    <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-                      Expiry
-                    </label>
-                    <input
-                      type="text"
-                      value={cardExpiry}
-                      onChange={(e) => setCardExpiry(e.target.value)}
-                      style={{ width: '100%' }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-                      CVC / CVV
-                    </label>
-                    <input
-                      type="text"
-                      value={cardCvc}
-                      onChange={(e) => setCardCvc(e.target.value)}
-                      style={{ width: '100%' }}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
@@ -415,7 +441,11 @@ const CheckoutPage = () => {
             className="btn btn-primary"
             style={{ width: '100%', padding: '14px', fontSize: '1rem', marginTop: '24px' }}
           >
-            {loading ? 'Processing Order...' : `Complete Order ($${totalPrice.toFixed(2)})`}
+            {loading ? 'Processing...' : (
+              paymentMethod === 'Razorpay'
+                ? `Pay with Razorpay ($${totalPrice.toFixed(2)})`
+                : `Place COD Order ($${totalPrice.toFixed(2)})`
+            )}
           </button>
 
           <div style={{
@@ -428,7 +458,7 @@ const CheckoutPage = () => {
             color: 'var(--text-muted)',
           }}>
             <ShieldCheck size={16} color="var(--success)" />
-            Bank-grade 256-bit encrypted checkout
+            Razorpay 256-bit encrypted secure payment
           </div>
         </div>
       </form>
