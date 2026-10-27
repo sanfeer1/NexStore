@@ -8,7 +8,8 @@ let cachedEtherealTransporter = null;
 const getTransporter = async () => {
   const host = process.env.SMTP_HOST;
   const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
+  const rawPass = process.env.SMTP_PASS || "";
+  const pass = rawPass.replace(/\s+/g, "").trim();
 
   // 1. If real SMTP credentials are provided in .env
   if (host && user && pass && !user.includes('your_')) {
@@ -18,7 +19,7 @@ const getTransporter = async () => {
         host: host.includes('gmail') ? undefined : host,
         port: Number(process.env.SMTP_PORT) || 587,
         secure: Number(process.env.SMTP_PORT) === 465,
-        auth: { user, pass },
+        auth: { user: user.trim(), pass },
       }),
       isReal: true,
     };
