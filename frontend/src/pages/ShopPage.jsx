@@ -10,6 +10,7 @@ const ShopPage = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(1);
 
@@ -117,15 +118,25 @@ const ShopPage = () => {
         </div>
       </div>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '260px 1fr',
-        gap: '32px',
-        alignItems: 'start',
-      }}>
+      {/* Mobile Filter Toggle Button */}
+      <div className="show-on-mobile" style={{ marginBottom: '20px' }}>
+        <button
+          onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
+          className="btn btn-secondary"
+          style={{ width: '100%', padding: '12px 16px', justifyContent: 'space-between' }}
+        >
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
+            <SlidersHorizontal size={18} color="var(--accent-primary)" />
+            Filter & Refine Products
+          </span>
+          <span className="badge badge-primary">{mobileFilterOpen ? 'Close' : 'Filter'}</span>
+        </button>
+      </div>
+
+      <div className="responsive-grid-split" style={{ alignItems: 'start' }}>
         {/* Left Filter Sidebar */}
         <aside
-          className="glass-panel"
+          className={`glass-panel ${!mobileFilterOpen ? "hide-on-mobile" : ""}`}
           style={{
             padding: '24px',
             display: 'flex',

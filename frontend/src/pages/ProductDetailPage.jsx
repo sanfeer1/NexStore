@@ -111,7 +111,7 @@ const ProductDetailPage = () => {
       {/* Main Product Showcase */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         gap: '48px',
         marginBottom: '60px',
       }}>
@@ -119,7 +119,7 @@ const ProductDetailPage = () => {
         <div>
           <div style={{
             width: '100%',
-            height: '460px',
+            height: 'clamp(280px, 45vw, 460px)',
             borderRadius: 'var(--radius-lg)',
             overflow: 'hidden',
             background: '#0e1424',
@@ -319,7 +319,7 @@ const ProductDetailPage = () => {
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: '40px',
         }}>
           {/* Review Submission Form */}

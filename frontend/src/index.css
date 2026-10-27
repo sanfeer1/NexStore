@@ -244,3 +244,96 @@ input:focus, select:focus, textarea:focus {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.25);
 }
+
+/* ==========================================================================
+   MOBILE & RESPONSIVE DESIGN SYSTEM (Universal for all present & future pages)
+   ========================================================================== */
+
+/* Responsive Container */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 16px;
+  }
+}
+
+/* Responsive Product Cards Grid */
+@media (max-width: 768px) {
+  .grid-products {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+  }
+}
+
+@media (max-width: 380px) {
+  .grid-products {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Visibility Utilities */
+.hide-on-mobile {
+  display: flex !important;
+}
+
+.show-on-mobile {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .show-on-mobile {
+    display: flex !important;
+  }
+}
+
+/* Responsive Two-Column Splits (Catalog, Checkout, Details) */
+.responsive-grid-split {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 32px;
+}
+
+@media (max-width: 860px) {
+  .responsive-grid-split {
+    grid-template-columns: 1fr !important;
+    gap: 20px;
+  }
+}
+
+/* Mobile Glass Panel adjustments */
+@media (max-width: 640px) {
+  .glass-panel {
+    border-radius: var(--radius-md);
+  }
+
+  .btn {
+    padding: 10px 18px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Responsive Table Wrapper */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Slide Down Mobile Menu Animation */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
