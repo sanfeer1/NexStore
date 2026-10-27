@@ -109,7 +109,7 @@ const OrdersPage = () => {
                 <div style={{ textAlign: 'right' }}>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Total Amount</span>
                   <h4 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#34d399' }}>
-                    ${order.totalPrice?.toFixed(2)}
+                    ₹{order.totalPrice?.toLocaleString("en-IN")}
                   </h4>
                 </div>
 

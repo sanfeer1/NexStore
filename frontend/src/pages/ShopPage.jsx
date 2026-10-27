@@ -212,7 +212,7 @@ const ShopPage = () => {
           {/* Price Range Filter */}
           <div>
             <label style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>
-              Price Range ($)
+              Price Range (₹)
             </label>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <input

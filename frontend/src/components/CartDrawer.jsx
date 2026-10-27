@@ -196,7 +196,7 @@ const CartDrawer = () => {
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fff' }}>
-                      ${(item.price * item.quantity).toFixed(2)}
+                      ₹{(item.price * item.quantity).toLocaleString("en-IN")}
                     </span>
 
                     {/* Quantity Selector */}
@@ -266,21 +266,21 @@ const CartDrawer = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Subtotal</span>
-                <span>${itemsPrice.toFixed(2)}</span>
+                <span>₹{itemsPrice.toLocaleString("en-IN")}</span>
               </div>
               {discountAmount > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#10b981' }}>
                   <span>Discount ({discountPercent}%)</span>
-                  <span>-${discountAmount.toFixed(2)}</span>
+                  <span>-₹{discountAmount.toLocaleString("en-IN")}</span>
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Shipping</span>
-                <span>{shippingPrice === 0 ? <strong style={{ color: '#10b981' }}>FREE</strong> : `$${shippingPrice.toFixed(2)}`}</span>
+                <span>{shippingPrice === 0 ? <strong style={{ color: '#10b981' }}>FREE</strong> : `₹${shippingPrice.toLocaleString("en-IN")}`}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Tax (5%)</span>
-                <span>${taxPrice.toFixed(2)}</span>
+                <span>₹{taxPrice.toLocaleString("en-IN")}</span>
               </div>
               <div style={{
                 display: 'flex',
@@ -292,7 +292,7 @@ const CartDrawer = () => {
                 color: '#fff',
               }}>
                 <span>Total</span>
-                <span>${totalPrice.toFixed(2)}</span>
+                <span>₹{totalPrice.toLocaleString("en-IN")}</span>
               </div>
             </div>
 

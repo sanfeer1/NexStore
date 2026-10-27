@@ -170,11 +170,11 @@ const ProductCard = ({ product }) => {
           <div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
               <span style={{ fontSize: '1.25rem', fontWeight: 700, color: '#fff', fontFamily: 'var(--font-heading)' }}>
-                ${displayPrice.toFixed(2)}
+                ₹{displayPrice.toLocaleString("en-IN")}
               </span>
               {hasDiscount && (
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
-                  ${product.price.toFixed(2)}
+                  ₹{product.price.toLocaleString("en-IN")}
                 </span>
               )}
             </div>

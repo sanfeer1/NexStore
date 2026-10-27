@@ -91,7 +91,7 @@ export const CartProvider = ({ children }) => {
   const itemsPrice = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const discountAmount = (itemsPrice * discountPercent) / 100;
   const taxablePrice = itemsPrice - discountAmount;
-  const shippingPrice = taxablePrice > 150 || taxablePrice === 0 ? 0 : 15;
+  const shippingPrice = taxablePrice > 1499 || taxablePrice === 0 ? 0 : 99;
   const taxPrice = Number((taxablePrice * 0.05).toFixed(2));
   const totalPrice = Number((taxablePrice + shippingPrice + taxPrice).toFixed(2));
 

@@ -159,8 +159,8 @@ const HomePage = () => {
                   <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>Studio Acoustic Master</p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#34d399' }}>$199.99</div>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>$249.99</span>
+                  <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#34d399' }}>₹15,999</div>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>₹19,999</span>
                 </div>
               </div>
             </div>

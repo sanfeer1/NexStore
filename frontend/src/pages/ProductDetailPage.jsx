@@ -210,15 +210,15 @@ const ProductDetailPage = () => {
               fontWeight: 800,
               color: '#fff',
             }}>
-              ${displayPrice.toFixed(2)}
+              ₹{displayPrice.toLocaleString("en-IN")}
             </span>
             {hasDiscount && (
               <>
                 <span style={{ fontSize: '1.1rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
-                  ${product.price.toFixed(2)}
+                  ₹{product.price.toLocaleString("en-IN")}
                 </span>
                 <span className="badge badge-danger">
-                  Save ${(product.price - product.discountPrice).toFixed(2)}
+                  Save ₹{(product.price - product.discountPrice).toLocaleString("en-IN")}
                 </span>
               </>
             )}
@@ -302,7 +302,7 @@ const ProductDetailPage = () => {
             borderTop: '1px solid var(--border-subtle)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              <Truck size={18} color="var(--accent-primary)" /> Free express delivery over $150
+              <Truck size={18} color="var(--accent-primary)" /> Free express delivery over ₹1,499
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
               <ShieldCheck size={18} color="var(--success)" /> Official 2-year manufacturer warranty

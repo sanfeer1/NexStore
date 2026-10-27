@@ -35,7 +35,7 @@ const Footer = () => {
             </div>
             <div>
               <h4 style={{ fontSize: '0.95rem', fontWeight: 700 }}>Express Delivery</h4>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>Free shipping on orders over $150</p>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>Free shipping on orders over ₹1,499</p>
             </div>
           </div>
 

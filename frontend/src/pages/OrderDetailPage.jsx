@@ -210,11 +210,11 @@ const OrderDetailPage = () => {
                     </h5>
                   </Link>
                   <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                    ${item.price.toFixed(2)} × {item.quantity}
+                    ₹{item.price?.toLocaleString("en-IN")} × {item.quantity}
                   </p>
                 </div>
                 <strong style={{ fontSize: '1rem', color: '#fff' }}>
-                  ${(item.price * item.quantity).toFixed(2)}
+                  ₹{(item.price * item.quantity).toLocaleString("en-IN")}
                 </strong>
               </div>
             ))}
@@ -244,15 +244,15 @@ const OrderDetailPage = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Subtotal</span>
-                <span>${order.itemsPrice?.toFixed(2)}</span>
+                <span>₹{order.itemsPrice?.toLocaleString("en-IN")}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Shipping</span>
-                <span>${order.shippingPrice?.toFixed(2)}</span>
+                <span>₹{order.shippingPrice?.toLocaleString("en-IN")}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Taxes</span>
-                <span>${order.taxPrice?.toFixed(2)}</span>
+                <span>₹{order.taxPrice?.toLocaleString("en-IN")}</span>
               </div>
               <div style={{
                 display: 'flex',
@@ -264,7 +264,7 @@ const OrderDetailPage = () => {
                 color: '#fff',
               }}>
                 <span>Total Paid</span>
-                <span style={{ color: '#34d399' }}>${order.totalPrice?.toFixed(2)}</span>
+                <span style={{ color: '#34d399' }}>₹{order.totalPrice?.toLocaleString("en-IN")}</span>
               </div>
             </div>
           </div>

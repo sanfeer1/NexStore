@@ -181,7 +181,7 @@ const AdminDashboardPage = () => {
             <DollarSign size={22} />
           </div>
           <h2 style={{ fontSize: '2rem', fontWeight: 800, marginTop: '8px', color: '#fff' }}>
-            ${totalRevenue.toFixed(2)}
+            ₹{totalRevenue.toLocaleString("en-IN")}
           </h2>
           <span style={{ fontSize: '0.78rem', color: '#34d399' }}>Live confirmed orders</span>
         </div>
@@ -279,7 +279,7 @@ const AdminDashboardPage = () => {
                       {new Date(o.createdAt).toLocaleDateString()}
                     </td>
                     <td style={{ padding: '14px 12px', fontWeight: 700, color: '#fff' }}>
-                      ${o.totalPrice?.toFixed(2)}
+                      ₹{o.totalPrice?.toLocaleString("en-IN")}
                     </td>
                     <td style={{ padding: '14px 12px' }}>
                       <span className={`badge ${o.isPaid ? 'badge-success' : 'badge-warning'}`}>
@@ -353,7 +353,7 @@ const AdminDashboardPage = () => {
                     </span>
                   </td>
                   <td style={{ padding: '12px', fontWeight: 700 }}>
-                    ${p.price.toFixed(2)}
+                    ₹{p.price.toLocaleString("en-IN")}
                   </td>
                   <td style={{ padding: '12px', textAlign: 'right' }}>
                     <button
@@ -431,7 +431,7 @@ const AdminDashboardPage = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
                   <label style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-                    Retail Price ($)
+                    Retail Price (₹)
                   </label>
                   <input
                     type="number"
@@ -445,7 +445,7 @@ const AdminDashboardPage = () => {
                 </div>
                 <div>
                   <label style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-                    Discount Price ($) (Optional)
+                    Discount Price (₹) (Optional)
                   </label>
                   <input
                     type="number"
